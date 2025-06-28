@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Bumble</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">c
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
   <style>
     @font-face {
       font-family: 'Circular';
@@ -156,7 +156,6 @@
       background: #fff;
       min-height: 0;
       padding: 0 14px;
-      /* Remove padding-bottom, padding-top */
       height: auto;
       margin-bottom: 20px !important;
     }
@@ -308,14 +307,15 @@
     .send-btn:hover:enabled {
       background: var(--bumble-yellow-dark);
     }
-	
-	/* Hearts animation */
+
+    /* Hearts animation */
     #hearts-overlay {
       pointer-events: none;
       position: fixed;
       inset: 0;
       z-index: 100;
       display: none;
+      top: -30px;
     }
     .heart {
       position: absolute;
@@ -327,7 +327,7 @@
     }
     @keyframes fall-heart {
       0% {
-        transform: translateY(-40px) scale(1) rotate(0deg);
+        transform: translateY(-40px) scale(1) rotate(0deg); /* Start well above the viewport */
         opacity: 1;
       }
       80% {
@@ -338,6 +338,7 @@
         opacity: 0;
       }
     }
+
 
     @media (max-width: 500px) {
       .chat-container, .chat-header, .chat-input-bar {
@@ -381,7 +382,7 @@
       <div class="chat-bubble me hidden" id="message8">Ok &#128076; How about Yodoyabashi?</div>
       <div class="chat-bubble them hidden" id="message9">Perfect! Outside １出口, for example?</div>
       <div class="chat-bubble me hidden" id="message10">ok I'l try to find １出口</div>
-      <div class="chat-bubble them hidden" id="message11">Nice! Let's meet there now, then &#128522</div>
+      <div class="chat-bubble them hidden" id="message11">Nice! Let's meet there now, then &#128522;</div>
       <div class="chat-bubble me hidden" id="message12">Don't forget your purse &#128092;</div>
       <div class="chat-bubble them hidden" id="message13">That's right, I almost forgot it!!</div>
       <div class="chat-bubble them hidden" id="message14">I feel like this next month will be an important one...<br/>Let's have fun together, 瑠美!</div>
@@ -447,7 +448,7 @@
         after: [
           { delay: 2000, unhide: "message13" },
           { delay: 6000, unhide: "message14" },
-          { delay: 7000, custom: () => showFallingHearts() }
+          { delay: 7000, custom: () => showFallingHearts() } // Trigger hearts after last message
         ]
       }
     ];
@@ -457,6 +458,7 @@
     const messagesArea = document.getElementById('messagesArea');
     let currentStep = 0;
     let charIndex = 0;
+    let lastValue = '';
 
     function resetInput() {
       input.value = '';
@@ -521,7 +523,8 @@
       if (charIndex < step.text.length) {
         // Add up to 3 characters per key press
         const charsToAdd = Math.min(3, step.text.length - charIndex);
-        input.value += step.text.substr(charIndex, charsToAdd);
+        lastValue += step.text.substr(charIndex, charsToAdd);
+        input.value = lastValue;
         charIndex += charsToAdd;
         setTimeout(() => {
           input.setSelectionRange(input.value.length, input.value.length);
@@ -552,42 +555,17 @@
               currentStep++;
               enableInput();
             }
+            if (typeof action.custom === 'function') action.custom();
           }, action.delay);
         });
         lastValue = '';
       }
     }
-	
-	let lastValue = ''; // This will always be the value you want to show
 
-	function handleTyping(e) {
-	  const step = steps[currentStep];
-	  if (!step) return;
-	  e.preventDefault();
-	  if (charIndex < step.text.length) {
-		// Add up to 3 characters per key press
-		const charsToAdd = Math.min(3, step.text.length - charIndex);
-		lastValue += step.text.substr(charIndex, charsToAdd);
-		input.value = lastValue;
-		charIndex += charsToAdd;
-		setTimeout(() => {
-		  input.setSelectionRange(input.value.length, input.value.length);
-		  input.scrollLeft = input.scrollWidth;
-		}, 0);
-		if (charIndex === step.text.length) {
-		  sendBtn.disabled = false;
-		  sendBtn.removeAttribute('disabled');
-		}
-	  }
-	}
+    input.addEventListener('input', function(e) {
+      input.value = lastValue;
+    });
 
-	// This will revert any user-typed value back to your controlled value
-	input.addEventListener('input', function(e) {
-	  input.value = lastValue;
-	});
-
-
-	// For desktop: keep keydown event
     input.addEventListener('keydown', function(e) {
       if (input.disabled) {
         e.preventDefault();
@@ -610,7 +588,6 @@
       }
     });
 
-    // Scroll to bottom on input focus (keyboard pops up)
     input.addEventListener('focus', () => {
       setTimeout(() => {
         messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -622,7 +599,6 @@
     window.addEventListener('DOMContentLoaded', () => {
       enableInput();
       scrollToTop();
-      // Trigger page fade-in
       setTimeout(() => {
         document.querySelector('.chat-container').classList.add('page-fade-in');
       }, 10);
@@ -634,12 +610,11 @@
       overlay.innerHTML = '';
       overlay.style.display = 'block';
 
-      const hearts = [];
-      const heartSVG = `<svg viewBox="0 0 32 32" fill="#FF5A7D" width="32" height="32"><path d="M23.6,4.6c-2.2,0-4.3,1-5.6,2.7C16.7,5.6,14.6,4.6,12.4,4.6C8.3,4.6,5,7.9,5,12c0,7.2,11,15.4,11,15.4s11-8.2,11-15.4
+      const heartSVG = `<svg viewBox="0 0 32 32" fill="#B266FF" width="32" height="32"><path d="M23.6,4.6c-2.2,0-4.3,1-5.6,2.7C16.7,5.6,14.6,4.6,12.4,4.6C8.3,4.6,5,7.9,5,12c0,7.2,11,15.4,11,15.4s11-8.2,11-15.4
         C27,7.9,23.7,4.6,23.6,4.6z"/></svg>`;
 
       const screenW = window.innerWidth;
-      const n = 18;
+      const n = 101;
 
       for (let i = 0; i < n; i++) {
         const heart = document.createElement('div');
@@ -648,7 +623,6 @@
         heart.style.animationDelay = (Math.random() * 2) + 's';
         heart.innerHTML = heartSVG;
         overlay.appendChild(heart);
-        hearts.push(heart);
       }
 
       setTimeout(() => {
@@ -656,7 +630,6 @@
         overlay.innerHTML = '';
       }, 5000);
     }
-
   </script>
 </body>
 </html>
