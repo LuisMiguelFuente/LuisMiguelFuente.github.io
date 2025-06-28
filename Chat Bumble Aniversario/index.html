@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bumble</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    @font-face {
+      font-family: 'Circular';
+      src: local('Circular'), local('Circular Std'), local('Circular Pro'),
+           url('https://cdn.jsdelivr.net/gh/rsms/inter/font-files/Inter-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    :root {
+      --bumble-yellow: #ffca3a;
+      --bumble-yellow-dark: #e6b12e;
+      --bubble-gray: #f5f6fa;
+      --text-dark: #222;
+      --date-gray: #bdbdbd;
+      --input-gray: #f5f6fa;
+      --bubble-shadow: 0 1px 8px rgba(255,202,58,0.10);
+    }
+    body {
+      background: #fff;
+      margin: 0;
+      font-family: 'Circular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .chat-container {
+	  opacity: 0;
+	  transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-left: 1.5px solid var(--bumble-yellow);
+      border-right: 1.5px solid var(--bumble-yellow);
+    }
+	.chat-container.page-fade-in {
+	  opacity: 1;
+	}
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 62px;
+      padding: 0 14px;
+      background: #fff;
+      border-bottom: 1px solid #f5f6fa;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(255,202,58,0.04);
+    }
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-arrow {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 2px;
+    }
+    .back-arrow svg {
+      width: 32px;
+      height: 32px;
+      display: block;
+      stroke: var(--text-dark);
+      stroke-width: 3.2;
+    }
+    .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffe4a0;
+      border: 2px solid #fff;
+      background-image: url('https://drive.google.com/thumbnail?id=1lk8ABl14GJe0H1CIQNb9mYCxUvQVh0r_');
+      background-size: cover;
+      background-position: center;
+      margin-right: 8px;
+      box-shadow: 0 1px 4px rgba(255,202,58,0.13);
+    }
+    .username {
+      font-size: 1.12em;
+      font-weight: 700;
+      color: var(--text-dark);
+      letter-spacing: 0.2px;
+      margin-right: 8px;
+      user-select: none;
+    }
+    .menu-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .menu-btn svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+      fill: var(--text-dark);
+    }
+    .date-separator {
+      text-align: center;
+      color: var(--date-gray);
+      font-size: 0.97em;
+      margin: 18px 0 6px 0;
+      letter-spacing: 0.1em;
+      user-select: none;
+    }
+    .messages-area {
+      flex: 1;
+      padding: 0 14px 90px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #fff;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 13px 18px;
+      border-radius: 19px;
+      font-size: 1em;
+      line-height: 1.5;
+      box-shadow: var(--bubble-shadow);
+      position: relative;
+      word-break: break-word;
+      display: inline-block;
+      margin-bottom: 2px;
+      user-select: text;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.3s;
+    }
+    .chat-bubble.hidden {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+    .chat-bubble.fade-in {
+      display: inline-block !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transition: opacity 0.3s;
+    }
+    .chat-bubble.them {
+      background: var(--bubble-gray);
+      color: var(--text-dark);
+      align-self: flex-start;
+      border-bottom-left-radius: 6px;
+    }
+    .chat-bubble.me {
+      background: var(--bumble-yellow);
+      color: var(--text-dark);
+      align-self: flex-end;
+      border-bottom-right-radius: 6px;
+    }
+    .chat-input-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 430px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 10px 8px 14px 8px;
+      box-shadow: 0 -2px 10px rgba(255,202,58,0.07);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 3;
+      border-left: 1.5px solid var(--bumble-yellow);
+      border-right: 1.5px solid var(--bumble-yellow);
+    }
+    .input-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bubble-gray);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 3px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+      padding: 0;
+    }
+    .input-icon svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      stroke: #888;
+      stroke-width: 2;
+    }
+    .input-icon:hover {
+      background: #ececec;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      border: none;
+      background: var(--input-gray);
+      border-radius: 22px;
+      padding: 11px 16px;
+      font-size: 1em;
+      outline: none;
+      color: var(--text-dark);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      user-select: text;
+    }
+    .gif-btn {
+      background: var(--bubble-gray);
+      border-radius: 18px;
+      font-weight: 700;
+      color: var(--text-dark);
+      font-size: 1em;
+      margin-left: 3px;
+      letter-spacing: 0.1em;
+      width: 44px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      box-shadow: 0 1px 4px rgba(255,202,58,0.13);
+      opacity: 0.7;
+      cursor: not-allowed;
+      border: none;
+      padding: 0;
+    }
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      cursor: not-allowed;
+      transition: background 0.15s, opacity 0.15s;
+      border: none;
+      padding: 0;
+    }
+    .send-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: #222;
+      stroke-width: 3;
+      fill: none;
+      display: block;
+    }
+    .send-btn:enabled {
+      background: var(--bumble-yellow);
+      opacity: 1;
+      cursor: pointer;
+    }
+    .send-btn:enabled svg {
+      stroke: #222;
+    }
+    .send-btn:hover:enabled {
+      background: var(--bumble-yellow-dark);
+    }
+    @media (max-width: 500px) {
+      .chat-container, .chat-input-bar {
+        max-width: 100vw;
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="header-left">
+        <button class="back-arrow" aria-label="Back" type="button">
+          <svg viewBox="0 0 32 32">
+            <polyline points="22 6 10 16 22 26" fill="none"/>
+          </svg>
+        </button>
+        <span class="profile-pic"></span>
+        <span class="username">Luis</span>
+      </div>
+      <div class="header-right">
+        <button class="menu-btn" aria-label="Menu" type="button">
+          <svg viewBox="0 0 28 28">
+            <circle cx="14" cy="6.5" r="2.5"/>
+            <circle cx="14" cy="14" r="2.5"/>
+            <circle cx="14" cy="21.5" r="2.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="messages-area" id="messagesArea">
+      <div class="date-separator">29 de junio de 2024</div>
+      <div class="chat-bubble them">Hi, こんにちは!<br/>Nice to meet you &#128521;</div>
+      <div class="chat-bubble them" id="message2">Or did I meet you before...? &#129320;</div>
+      <div class="chat-bubble me hidden" id="message3">こんにちは &#128522;</div>
+      <div class="chat-bubble them hidden" id="message4">Do you prefer to talk first in person, or just chat?</div>
+      <div class="chat-bubble me hidden" id="message5">I like to talk in person! But my English skill is verrrrrry low &#x1F643;</div>
+      <div class="chat-bubble them hidden" id="message6">That's okay, I have patience &#128522;<br/>I prefer to talk in person too, I think it's better to know the other person</div>
+      <div class="chat-bubble them hidden" id="message7">Do you want to meet this afternoon? I know a good cafe in Kitahama &#9749;</div>
+      <div class="chat-bubble me hidden" id="message8">Ok &#128076; How about Yodoyabashi?</div>
+      <div class="chat-bubble them hidden" id="message9">Perfect! Outside １出口, for example?</div>
+      <div class="chat-bubble me hidden" id="message10">ok I'l try to find １出口</div>
+      <div class="chat-bubble them hidden" id="message11">Nice! Let's meet there now, then &#128522</div>
+      <div class="chat-bubble me hidden" id="message12">Don't forget your purse &#128092;</div>
+      <div class="chat-bubble them hidden" id="message13">That's right, I almost forgot!!</div>
+      <div class="chat-bubble them hidden" id="message14">I feel like this next month will be an important one...<br/>Let's have fun together, 瑠美!</div>
+    </div>
+    <div class="chat-input-bar">
+      <button class="input-icon" aria-label="Camera" type="button" tabindex="-1">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="7" width="18" height="12" rx="2" ry="2" fill="none" stroke="#888" stroke-width="2"/>
+          <circle cx="12" cy="13" r="3" fill="none" stroke="#888" stroke-width="2"/>
+          <path d="M16 7l-1-3H9L8 7" fill="none" stroke="#888" stroke-width="2"/>
+        </svg>
+      </button>
+      <input type="text" placeholder="Aa" autocomplete="off" />
+      <button class="gif-btn" disabled>GIF</button>
+      <button class="send-btn" aria-label="Send" type="button" disabled>
+        <svg viewBox="0 0 24 24">
+          <polygon points="4 20 20 12 4 4 4 20" fill="none"/>
+          <polyline points="4 20 20 12 4 4" fill="none"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <script>
+    const steps = [
+      {
+        inputId: "message3",
+        text: "こんにちは 😊",
+        sendUnhide: "message3",
+        after: [
+          { delay: 2000, unhide: "message4", enableInput: true }
+        ]
+      },
+      {
+        inputId: "message5",
+        text: "I like to talk in person! But my English skill is verrrrrry low 🙃",
+        sendUnhide: "message5",
+        after: [
+          { delay: 4000, unhide: "message6" },
+          { delay: 6000, unhide: "message7", enableInput: true }
+        ]
+      },
+      {
+        inputId: "message8",
+        text: "Ok 👌 How about Yodoyabashi?",
+        sendUnhide: "message8",
+        after: [
+          { delay: 2000, unhide: "message9", enableInput: true }
+        ]
+      },
+      {
+        inputId: "message10",
+        text: "ok I'l try to find １出口",
+        sendUnhide: "message10",
+        after: [
+          { delay: 2000, unhide: "message11", enableInput: true }
+        ]
+      },
+      {
+        inputId: "message12",
+        text: "Don't forget your purse 💼",
+        sendUnhide: "message12",
+        after: [
+          { delay: 2000, unhide: "message13" },
+          { delay: 6000, unhide: "message14" }
+        ]
+      }
+    ];
+
+    const input = document.querySelector('.chat-input-bar input');
+    const sendBtn = document.querySelector('.send-btn');
+    const messagesArea = document.getElementById('messagesArea');
+    let currentStep = 0;
+    let charIndex = 0;
+
+    function resetInput() {
+      input.value = '';
+      charIndex = 0;
+      sendBtn.disabled = true;
+      sendBtn.setAttribute('disabled', 'disabled');
+      setTimeout(() => {
+        input.setSelectionRange(0, 0);
+        input.scrollLeft = input.scrollWidth;
+      }, 0);
+    }
+
+    function enableInput() {
+      input.disabled = false;
+      resetInput();
+      input.focus();
+    }
+
+    function disableInput() {
+      input.disabled = true;
+      sendBtn.disabled = true;
+      sendBtn.setAttribute('disabled', 'disabled');
+    }
+
+    // Fade in animation for chat bubbles (opacity only, using display: none/block)
+    function fadeInMsg(el) {
+      el.style.display = 'inline-block';
+      el.style.opacity = 0;
+      el.classList.remove('hidden');
+      // Force reflow to allow transition
+      void el.offsetWidth;
+      el.classList.add('fade-in');
+	  scrollToBottom();
+      setTimeout(() => {
+        el.style.opacity = '';
+        el.classList.remove('fade-in');
+        el.style.display = '';
+      }, 500);
+      requestAnimationFrame(() => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      });
+    }
+
+    function unhideMsg(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        fadeInMsg(el);
+      }
+    }
+
+    function scrollToBottom() {
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function handleTyping(e) {
+      const step = steps[currentStep];
+      if (!step) return;
+      e.preventDefault();
+      if (charIndex < step.text.length) {
+        // Add up to 3 characters per key press
+        const charsToAdd = Math.min(3, step.text.length - charIndex);
+        input.value += step.text.substr(charIndex, charsToAdd);
+        charIndex += charsToAdd;
+        setTimeout(() => {
+          input.setSelectionRange(input.value.length, input.value.length);
+          input.scrollLeft = input.scrollWidth;
+        }, 0);
+        if (charIndex === step.text.length) {
+          sendBtn.disabled = false;
+          sendBtn.removeAttribute('disabled');
+        }
+      }
+    }
+
+    function handleSend() {
+      const step = steps[currentStep];
+      if (!step) return;
+      unhideMsg(step.sendUnhide);
+      requestAnimationFrame(() => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      });
+      input.value = '';
+      charIndex = 0;
+      disableInput();
+      if (step.after && step.after.length) {
+        step.after.forEach(action => {
+          setTimeout(() => {
+            if (action.unhide) unhideMsg(action.unhide);
+            if (action.enableInput) {
+              currentStep++;
+              enableInput();
+            }
+          }, action.delay);
+        });
+      }
+    }
+
+    input.addEventListener('keydown', function(e) {
+      if (input.disabled) {
+        e.preventDefault();
+        return;
+      }
+      if (currentStep >= steps.length) {
+        e.preventDefault();
+        return;
+      }
+      handleTyping(e);
+    });
+
+    sendBtn.addEventListener('click', function() {
+      if (!sendBtn.disabled) handleSend();
+      scrollToBottom();
+    });
+
+    input.addEventListener('keyup', function(e) {
+      if (e.key === 'Enter' && !sendBtn.disabled) {
+        handleSend();
+      }
+    });
+
+    window.addEventListener('resize', scrollToBottom);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      enableInput();
+      scrollToBottom();
+	  // Trigger page fade-in
+	  setTimeout(() => {
+		document.querySelector('.chat-container').classList.add('page-fade-in');
+	  }, 100); // slight delay ensures transition
+    });
+  </script>
+</body>
+</html>
